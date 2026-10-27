@@ -23,6 +23,20 @@ defmodule GimmeTest do
       assert Gimme.dat(map, name) == {:error, :not_found}
       assert_raise KeyError, fn -> Gimme.dat!(map, name) end
     end
+
+    for key <- [nil, true, false] do
+      assert_raise FunctionClauseError, fn -> Gimme.dat(%{key => 1}, key) end
+    end
+  end
+
+  test "only maps, and only string or atom keys" do
+    for {thing, key} <- [{[key: 1], :key}, {%{1 => :a}, 1}] do
+      assert_raise FunctionClauseError, fn -> Gimme.dat(thing, key) end
+    end
+  end
+
+  test "exact match wins for atoms too" do
+    assert Gimme.dat(%{:key => 1, "key" => 2}, :key) == {:ok, 1}
   end
 
   property "it finds it no matter how it's stored" do
@@ -47,9 +61,8 @@ defmodule GimmeTest do
             lookup_as <- member_of([:atom, :string]),
             others <- map_of(one_of([string(:alphanumeric), atom(:alphanumeric)]), term())
           ) do
-      atom = String.to_atom(name)
-      key = if lookup_as == :atom, do: atom, else: name
-      map = Map.drop(others, [name, atom])
+      key = if lookup_as == :atom, do: String.to_atom(name), else: name
+      map = Map.reject(others, fn {k, _} -> to_string(k) == name end)
 
       assert Gimme.dat(map, key) == {:error, :not_found}
       assert_raise KeyError, fn -> Gimme.dat!(map, key) end
