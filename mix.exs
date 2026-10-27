@@ -4,7 +4,7 @@ defmodule Gimme.MixProject do
   def project do
     [
       app: :gimme,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -26,6 +26,7 @@ defmodule Gimme.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:stream_data, "~> 1.4", only: :test}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
