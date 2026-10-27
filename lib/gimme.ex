@@ -4,6 +4,9 @@ defmodule Gimme do
   """
 
   @not_keys [nil, true, false]
+  @not_key_strings Enum.map(@not_keys, &Atom.to_string/1)
+
+  defguardp is_key(key) when is_binary(key) or (is_atom(key) and key not in @not_keys)
 
   @doc """
   Get any `:key` or `"key"` from a map :)
@@ -31,9 +34,7 @@ defmodule Gimme do
       {:error, :not_found}
   """
   @spec dat(map(), String.t() | atom()) :: {:ok, any()} | {:error, :not_found}
-  def dat(thing, key)
-      when is_map(thing) and
-             ((is_atom(key) and key not in @not_keys) or is_binary(key)) do
+  def dat(thing, key) when is_map(thing) and is_key(key) do
     with :error <- Map.fetch(thing, key),
          :error <- fetch_other(thing, key) do
       {:error, :not_found}
@@ -60,7 +61,7 @@ defmodule Gimme do
     with {:ok, atom} <- existing_atom(key), do: Map.fetch(thing, atom)
   end
 
-  defp existing_atom(string) when string in ["nil", "true", "false"], do: :error
+  defp existing_atom(string) when string in @not_key_strings, do: :error
 
   defp existing_atom(string) do
     {:ok, String.to_existing_atom(string)}
